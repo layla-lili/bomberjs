@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplayer Bomberman</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen">
+    <div class="login-container">
+      <h1>Multiplayer Bomberman</h1>
+      <div class="login-form">
+        <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
+        <button id="join-btn">Join Game</button>
+      </div>
+      <div class="instructions">
+        <h3>How to Play:</h3>
+        <ul>
+          <li>Use arrow keys or WASD to move</li>
+          <li>Space bar or B to place bombs</li>
+          <li>Destroy blocks to find power-ups</li>
+          <li>Eliminate other players and be the last one standing!</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen" style="display: none;">
+    <div class="game-container">
+      <div class="game-header">
+        <div class="game-info">
+          <h2>Bomberman</h2>
+          <div id="game-status">Waiting for players...</div>
+        </div>
+        <div class="players-container">
+          <h3>Players</h3>
+          <ul id="players"></ul>
+        </div>
+      </div>
+
+      <div class="game-content">
+        <div id="game-board"></div>
+        
+        <div class="sidebar">
+          <div class="controls">
+            <h3>Controls</h3>
+            <div class="control-btns">
+              <button id="up">↑</button>
+              <div class="horizontal-btns">
+                <button id="left">←</button>
+                <button id="bomb">💣</button>
+                <button id="right">→</button>
+              </div>
+              <button id="down">↓</button>
+            </div>
+          </div>
+          
+          <div id="score-board" class="scoreboard">
+            <h3>Score</h3>
+            <!-- Scores will be added dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Winner Banner -->
+    <div id="winner-banner" style="display: none;">
+      <div class="winner-content">
+        <h2 id="winner-text">Player 1 is the last player standing!</h2>
+        <p>New game starting in <span id="countdown">10</span> seconds...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
