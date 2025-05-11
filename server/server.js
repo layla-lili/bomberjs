@@ -434,8 +434,25 @@ function collectPowerUp(player) {
 
 // Modify the socket connection handling
 io.on("connection", (socket) => {
-  console.log("Player connected:", socket.id);
+  console.log("A user connected:", socket.id);
 
+  // Handle chat messages
+  socket.on("chatMessage", (message) => {
+    const player = gameState.players[socket.id];
+    if (player) {
+      // Sanitize the message to prevent XSS while preserving emojis
+      const sanitizedMessage = message.replace(/[<>]/g, '');
+      
+      const chatData = {
+        sender: player.name,
+        message: sanitizedMessage,
+        time: new Date().toLocaleTimeString()
+      };
+      io.emit("chatMessage", chatData);
+    }
+  });
+
+  // Handle player joining
   socket.on("joinGame", (playerName) => {
     const playerCount = Object.keys(gameState.players).length;
     const startPosition = getPlayerStartPosition(playerCount);

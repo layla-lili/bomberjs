@@ -13,6 +13,11 @@ class BombermanGame {
     this.winnerText = document.getElementById("winner-text");
     this.countdownElement = document.getElementById("countdown");
     this.scoreBoard = document.getElementById("score-board");
+    this.chatMessages = document.getElementById("chat-messages");
+    this.chatInput = document.getElementById("chat-input");
+    this.sendMessageBtn = document.getElementById("send-message");
+    this.emojiButton = document.getElementById("emoji-button");
+    this.emojiPicker = document.getElementById("emoji-picker");
 
     // Movement buttons
     this.upBtn = document.getElementById("up");
@@ -29,6 +34,41 @@ class BombermanGame {
 
     this.setupEventListeners();
     this.setupSocketListeners();
+    this.setupEmojiPicker();
+  }
+
+  setupEmojiPicker() {
+    // Toggle emoji picker visibility
+    this.emojiButton.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent event from bubbling up
+      this.emojiPicker.classList.toggle("visible");
+    });
+
+    // Add click handlers for each emoji
+    const emojis = this.emojiPicker.querySelectorAll(".emoji");
+    emojis.forEach(emoji => {
+      emoji.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent event from bubbling up
+        const input = this.chatInput;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const text = input.value;
+        
+        input.value = text.substring(0, start) + emoji.textContent + text.substring(end);
+        input.focus();
+        input.selectionStart = input.selectionEnd = start + emoji.textContent.length;
+        
+        this.emojiPicker.classList.remove("visible");
+      });
+    });
+
+    // Close emoji picker when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!this.emojiButton.contains(e.target) && 
+          !this.emojiPicker.contains(e.target)) {
+        this.emojiPicker.classList.remove("visible");
+      }
+    });
   }
 
   setupEventListeners() {
@@ -83,6 +123,14 @@ class BombermanGame {
         case "B":
           this.placeBomb();
           break;
+      }
+    });
+
+    // Chat event listeners
+    this.sendMessageBtn.addEventListener("click", () => this.sendChatMessage());
+    this.chatInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.sendChatMessage();
       }
     });
   }
@@ -144,6 +192,10 @@ class BombermanGame {
           this.winnerBanner.style.display = "none";
         }
       }, 1000);
+    });
+
+    socket.on("chatMessage", (chatData) => {
+      this.addChatMessage(chatData);
     });
   }
 
@@ -350,6 +402,36 @@ class BombermanGame {
     });
     
     cell.appendChild(explosion);
+  }
+
+  sendChatMessage() {
+    const message = this.chatInput.value.trim();
+    if (message) {
+      socket.emit("chatMessage", message);
+      this.chatInput.value = "";
+    }
+  }
+
+  addChatMessage(chatData) {
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("chat-message");
+    
+    const senderSpan = document.createElement("span");
+    senderSpan.classList.add("sender");
+    senderSpan.textContent = chatData.sender;
+    
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("time");
+    timeSpan.textContent = chatData.time;
+    
+    const messageText = document.createTextNode(`: ${chatData.message}`);
+    
+    messageElement.appendChild(senderSpan);
+    messageElement.appendChild(timeSpan);
+    messageElement.appendChild(messageText);
+    
+    this.chatMessages.appendChild(messageElement);
+    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   }
 }
 
