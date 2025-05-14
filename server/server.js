@@ -163,6 +163,7 @@ function startNewGame() {
     player.bombsAvailable = 1;
     player.bombRadius = EXPLOSION_RADIUS;
     player.alive = true;
+    player.lives = 3; // <-- Reset lives at new game
   });
 
   if (gameState.timerInterval) {
@@ -366,19 +367,28 @@ function handleExplosionEffects(explosion) {
     // Check for players in explosion
     Object.values(gameState.players).forEach((player) => {
       if (player.alive && player.position.x === x && player.position.y === y) {
-        // Player is hit by explosion
-        player.alive = false;
-
-        // Award point to bomber if it wasn't self-kill
-        if (player.id !== explosion.playerId) {
-          const bomber = gameState.players[explosion.playerId];
-          if (bomber) {
-            bomber.score += 1;
+        player.lives--;
+        if (player.lives > 0) {
+          // Respawn player at starting position
+          const playerIndex = Object.values(gameState.players).findIndex(
+            (p) => p.id === player.id
+          );
+          const respawnPos = getPlayerStartPosition(playerIndex);
+          player.position = { ...respawnPos };
+          player.alive = true;
+          // Optionally reset bombsAvailable and bombRadius if desired
+          io.emit("playerRespawned", player);
+        } else {
+          player.alive = false;
+          // Award point to bomber if it wasn't self-kill
+          if (player.id !== explosion.playerId) {
+            const bomber = gameState.players[explosion.playerId];
+            if (bomber) {
+              bomber.score += 1;
+            }
           }
+          io.emit("playerEliminated", player);
         }
-
-        // Notify about player elimination
-        io.emit("playerEliminated", player);
       }
     });
 
@@ -394,8 +404,9 @@ function handleExplosionEffects(explosion) {
 
 // Check if game should end (only one player left)
 function checkGameEnd() {
+  // Only count players who have lives left
   const alivePlayers = Object.values(gameState.players).filter(
-    (player) => player.alive
+    (player) => player.lives > 0
   );
 
   if (
@@ -441,12 +452,12 @@ io.on("connection", (socket) => {
     const player = gameState.players[socket.id];
     if (player) {
       // Sanitize the message to prevent XSS while preserving emojis
-      const sanitizedMessage = message.replace(/[<>]/g, '');
-      
+      const sanitizedMessage = message.replace(/[<>]/g, "");
+
       const chatData = {
         sender: player.name,
         message: sanitizedMessage,
-        time: new Date().toLocaleTimeString()
+        time: new Date().toLocaleTimeString(),
       };
       io.emit("chatMessage", chatData);
     }
@@ -466,6 +477,7 @@ io.on("connection", (socket) => {
       bombRadius: EXPLOSION_RADIUS,
       alive: true,
       score: 0,
+      lives: 3, // <-- Add this line
     };
 
     gameState.players[socket.id] = player;

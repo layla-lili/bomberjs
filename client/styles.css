@@ -458,3 +458,10 @@
   #send-message:hover {
     background-color: #45a049;
   }
+
+  .lives-span {
+    min-width: 40px;
+    text-align: center;
+    color: #e53935;
+    font-weight: bold;
+  }

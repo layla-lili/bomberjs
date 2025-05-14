@@ -246,11 +246,18 @@ class BombermanGame {
       if (player.id === this.playerId) {
         nameSpan.classList.add("current-player");
       }
-      
+
+      // Add lives display
+      const livesSpan = document.createElement("span");
+      livesSpan.textContent = `❤️ ${player.lives}`;
+      livesSpan.style.marginLeft = "8px";
+      livesSpan.style.marginRight = "8px";
+
       const scoreSpan = document.createElement("span");
       scoreSpan.textContent = player.score;
       
       scoreItem.appendChild(nameSpan);
+      scoreItem.appendChild(livesSpan);
       scoreItem.appendChild(scoreSpan);
       this.scoreBoard.appendChild(scoreItem);
     });
